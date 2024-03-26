@@ -18,6 +18,8 @@ interface IClassroomV2 {
     function isEnrolled(address student) external view returns (bool);
 }
 
+
+
 contract ClassroomV2Mock is IClassroomV2 {
     mapping(address => bool) private enrollments;
 
@@ -34,6 +36,7 @@ contract StudentV2 {
     IClassroomV2 classroom;
 
     constructor(address classroomAddress) {
+        require(classroomAddress != address(0), "Invalid address");
         classroom = IClassroomV2(classroomAddress);
     }
 
