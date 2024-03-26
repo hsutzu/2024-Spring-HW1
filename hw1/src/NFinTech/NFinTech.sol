@@ -74,7 +74,7 @@ contract NFinTech is IERC721 {
         return owner;
     }
 
- function setApprovalForAll(address operator, bool approved) external override {
+    function setApprovalForAll(address operator, bool approved) external override {
         require(msg.sender != operator, "NFinTech: approve to caller");
         _operatorApproval[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
@@ -113,13 +113,22 @@ contract NFinTech is IERC721 {
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) public override {
-        transferFrom(from, to, tokenId);
-        require(_checkOnERC721Received(from, to, tokenId, data), 
-            "NFinTech: transfer to non ERC721Receiver implementer");
+        require(_isApprovedOrOwner(msg.sender, tokenId), "NFinTech: caller is not owner nor approved");
+        _safeTransfer(from, to, tokenId, data);
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId) public override {
         safeTransferFrom(from, to, tokenId, "");
+    }
+
+    function _safeTransfer(address from, address to, uint256 tokenId, bytes memory data) internal {
+        transferFrom(from, to, tokenId);
+        require(_checkOnERC721Received(from, to, tokenId, data), "NFinTech: transfer to non ERC721Receiver implementer");
+    }
+
+    function _isApprovedOrOwner(address spender, uint256 tokenId) private view returns (bool) {
+        address owner = ownerOf(tokenId);
+        return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
     }
 
     function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) private returns (bool) {
