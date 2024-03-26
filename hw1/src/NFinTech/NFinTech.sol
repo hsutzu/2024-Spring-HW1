@@ -118,13 +118,18 @@ contract NFinTech is IERC721 {
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) public override {
-        transferFrom(from, to, tokenId);
-        require(_checkOnERC721Received(from, to, tokenId, data), "ERC721: transfer to non ERC721Receiver implementer");
+        _safeTransfer(from, to, tokenId, data);
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId) public override {
-        safeTransferFrom(from, to, tokenId, "");
+        _safeTransfer(from, to, tokenId, "");
     }
+
+    function _safeTransfer(address from, address to, uint256 tokenId, bytes memory _data) internal {
+        transferFrom(from, to, tokenId);
+        require(_checkOnERC721Received(from, to, tokenId, _data), "ERC721: transfer to non ERC721Receiver implementer");
+    }
+
 
     function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory _data) private returns (bool) {
         if (isContract(to)) {
