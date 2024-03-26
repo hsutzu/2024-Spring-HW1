@@ -3,47 +3,62 @@ pragma solidity ^0.8.0;
 
 /* Problem 1 Interface & Contract */
 contract StudentV1 {
-    uint256 private studentIdCounter = 0;
+    uint256 private studentCounter = 0;
+    mapping(uint256 => string) private studentRegistry;
 
-    function register() external returns (uint256) {
-        studentIdCounter += 1;
-        return studentIdCounter;
+    function register(string calldata name) external returns (uint256) {
+        studentCounter += 1;
+        studentRegistry[studentCounter] = name;
+        return studentCounter;
     }
 }
 
 /* Problem 2 Interface & Contract */
 interface IClassroomV2 {
-    function isEnrolled() external view returns (bool);
+    function isEnrolled(address student) external view returns (bool);
+}
+
+contract ClassroomV2Mock is IClassroomV2 {
+    mapping(address => bool) private enrollments;
+
+    function enroll(address student) external {
+        enrollments[student] = true;
+    }
+
+    function isEnrolled(address student) external view override returns (bool) {
+        return enrollments[student];
+    }
 }
 
 contract StudentV2 {
     IClassroomV2 classroom;
 
-    // Constructor takes an address of a contract that implements IClassroomV2
-    constructor(address _classroomAddress) {
-        require(_classroomAddress != address(0), "Invalid address");
-        classroom = IClassroomV2(_classroomAddress);
+    constructor(address classroomAddress) {
+        classroom = IClassroomV2(classroomAddress);
     }
 
-    // Function to handle student registration
-    function register() external view returns (uint256) {
-        // Check if the caller of this function is enrolled
-        require(classroom.isEnrolled(), "Student is not enrolled");
-
-        // Assuming student ID is 1 for simplicity. In a real scenario, you would have some logic
-        // to assign a unique ID to each student who registers.
-        // This could be a state variable that increments with each registration, for example.
-        return 1;
+    function checkEnrollment() external view returns (bool) {
+        return classroom.isEnrolled(msg.sender);
     }
 }
 
 /* Problem 3 Interface & Contract */
 contract StudentV3 {
-    uint256 registrationFee = 0.01 ether;
+    struct StudentInfo {
+        string name;
+        string email;
+    }
 
-    function register() external payable returns (uint256) {
-        require(msg.value >= registrationFee, "Insufficient registration fee");
-        // Assuming student ID is 1 for simplicity. Implement your logic as needed.
-        return 1;
+    uint256 private studentCounter = 0;
+    mapping(uint256 => StudentInfo) private studentDetails;
+
+    function register(string calldata name, string calldata email) external returns (uint256) {
+        studentCounter += 1;
+        studentDetails[studentCounter] = StudentInfo(name, email);
+        return studentCounter;
+    }
+
+    function isRegistered(uint256 studentId) external view returns (bool) {
+        return bytes(studentDetails[studentId].name).length > 0;
     }
 }
