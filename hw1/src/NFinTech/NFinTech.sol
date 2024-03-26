@@ -150,11 +150,11 @@ contract NFinTech is IERC721 {
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual {
-        // Hook that is called before any token transfer. This includes minting
-        // and burning.
+        // The hook can be used for additional validations or actions
     }
 
     function _approve(address to, uint256 tokenId) internal virtual {
+        require(_owner[tokenId] != address(0), "ERC721: owner query for nonexistent token");
         _tokenApproval[tokenId] = to;
         emit Approval(ownerOf(tokenId), to, tokenId);
     }
