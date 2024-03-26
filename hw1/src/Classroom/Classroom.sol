@@ -19,13 +19,20 @@ interface IClassroomV2 {
 contract StudentV2 {
     IClassroomV2 classroom;
 
+    // Constructor takes an address of a contract that implements IClassroomV2
     constructor(address _classroomAddress) {
+        require(_classroomAddress != address(0), "Invalid address");
         classroom = IClassroomV2(_classroomAddress);
     }
 
+    // Function to handle student registration
     function register() external view returns (uint256) {
+        // Check if the caller of this function is enrolled
         require(classroom.isEnrolled(), "Student is not enrolled");
-        // Assuming student ID is 1 for simplicity. Implement your logic as needed.
+
+        // Assuming student ID is 1 for simplicity. In a real scenario, you would have some logic
+        // to assign a unique ID to each student who registers.
+        // This could be a state variable that increments with each registration, for example.
         return 1;
     }
 }
