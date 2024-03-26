@@ -19,14 +19,8 @@ contract LiaoToken is IERC20 {
     uint256 private _totalSupply;
     string private _name;
     string private _symbol;
-
-    mapping(address account => uint256) private _balances;
     mapping(address account => bool) isClaim;
 
-    uint256 private _totalSupply;
-
-    string private _name;
-    string private _symbol;
 
     event Claim(address indexed user, uint256 indexed amount);
 
