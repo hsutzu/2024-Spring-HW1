@@ -74,22 +74,20 @@ contract NFinTech is IERC721 {
         return owner;
     }
 
-    function setApprovalForAll(address operator, bool approved) external override {
-        require(msg.sender != operator, "NFinTech: setting approval status for self");
+ function setApprovalForAll(address operator, bool approved) external override {
+        require(msg.sender != operator, "NFinTech: approve to caller");
         _operatorApproval[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
-    } 
-
+    }
 
     function isApprovedForAll(address owner, address operator) public view override returns (bool) {
         return _operatorApproval[owner][operator];
     }
 
-
     function approve(address to, uint256 tokenId) external override {
         address owner = ownerOf(tokenId);
         require(to != owner, "NFinTech: approval to current owner");
-        require(msg.sender == owner || isApprovedForAll(owner, msg.sender),
+        require(msg.sender == owner || isApprovedForAll(owner, msg.sender), 
             "NFinTech: approve caller is not owner nor approved for all");
 
         _tokenApproval[tokenId] = to;
@@ -102,11 +100,10 @@ contract NFinTech is IERC721 {
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public override {
-        require(_owner[tokenId] == from, "NFinTech: transfer of token that is not own");
+        require(_owner[tokenId] == from, "NFinTech: transfer from incorrect owner");
         require(to != address(0), "NFinTech: transfer to the zero address");
-
-        // Clear approvals from the previous owner
-        approve(address(0), tokenId);
+        require(_tokenApproval[tokenId] == msg.sender || isApprovedForAll(from, msg.sender), 
+            "NFinTech: caller is not token owner nor approved");
 
         _balances[from] -= 1;
         _balances[to] += 1;
@@ -117,35 +114,37 @@ contract NFinTech is IERC721 {
 
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) public override {
         transferFrom(from, to, tokenId);
-        require(_checkOnERC721Received(from, to, tokenId, data), "NFinTech: transfer to non ERC721Receiver implementer");
+        require(_checkOnERC721Received(from, to, tokenId, data), 
+            "NFinTech: transfer to non ERC721Receiver implementer");
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId) public override {
         safeTransferFrom(from, to, tokenId, "");
     }
 
-    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory _data) private returns (bool) {
-    if (isContract(to)) {
-        try IERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, _data) returns (bytes4 retval) {
-            return retval == IERC721TokenReceiver.onERC721Received.selector;
-        } catch (bytes memory reason) {
-            if (reason.length == 0) {
-                revert("NFinTech: transfer to non ERC721Receiver implementer");
-            } else {
-                assembly {
-                    revert(add(32, reason), mload(reason))
+    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) private returns (bool) {
+        if (isContract(to)) {
+            try IERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 retval) {
+                return retval == IERC721TokenReceiver.onERC721Received.selector;
+            } catch (bytes memory reason) {
+                if (reason.length == 0) {
+                    revert("NFinTech: transfer to non ERC721Receiver implementer");
+                } else {
+                    // Use assembly to revert with the custom error message
+                    assembly {
+                        revert(add(32, reason), mload(reason))
+                    }
                 }
             }
+        } else {
+            return true;
         }
-    } else {
-        return true;
     }
-}
+
     function isContract(address account) internal view returns (bool) {
-        // This method relies on extcodesize, which returns 0 for contracts in construction,
-        // since the code is only stored at the end of the constructor execution.
+        // This method relies on extcodesize to determine if an address is a contract
         uint256 size;
         assembly { size := extcodesize(account) }
         return size > 0;
     }
-
+}
