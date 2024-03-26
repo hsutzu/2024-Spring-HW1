@@ -14,9 +14,13 @@ interface IERC20 {
 }
 
 contract LiaoToken is IERC20 {
-    // TODO: you might need to declare several state variable here
-    mapping(address account => uint256) private _balances;
+    mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
+    uint256 private _totalSupply;
+    string private _name;
+    string private _symbol;
+
+    mapping(address account => uint256) private _balances;
     mapping(address account => bool) isClaim;
 
     uint256 private _totalSupply;
@@ -59,19 +63,33 @@ contract LiaoToken is IERC20 {
         return true;
     }
 
-    function transfer(address to, uint256 amount) external returns (bool) {
-        require(_balances[msg.sender] >= amount, 'Not enough tokens');_balances[msg.sender] -= amount;_balances[to] += amount;emit Transfer(msg.sender, to, amount);return true;
-    }
-
-    function transferFrom(address from, address to, uint256 value) external returns (bool) {
-        require(_balances[msg.sender] >= amount, 'Not enough tokens');_balances[msg.sender] -= amount;_balances[to] += amount;emit Transfer(msg.sender, to, amount);return true;
+function transfer(address to, uint256 amount) external returns (bool) {
+        require(_balances[msg.sender] >= amount, "ERC20: transfer amount exceeds balance");
+        _balances[msg.sender] -= amount;
+        _balances[to] += amount;
+        emit Transfer(msg.sender, to, amount);
+        return true;
     }
 
     function approve(address spender, uint256 amount) external returns (bool) {
-        require(_balances[msg.sender] >= amount, 'Not enough tokens');_balances[msg.sender] -= amount;_balances[to] += amount;emit Transfer(msg.sender, to, amount);return true;
+        require(spender != address(0), "ERC20: approve to the zero address");
+        _allowances[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(amount <= _allowances[from][msg.sender], "ERC20: transfer amount exceeds allowance");
+        require(_balances[from] >= amount, "ERC20: transfer amount exceeds balance");
+        
+        _balances[from] -= amount;
+        _balances[to] += amount;
+        _allowances[from][msg.sender] -= amount;
+        emit Transfer(from, to, amount);
+        return true;
     }
 
     function allowance(address owner, address spender) public view returns (uint256) {
-        require(_balances[msg.sender] >= amount, 'Not enough tokens');_balances[msg.sender] -= amount;_balances[to] += amount;emit Transfer(msg.sender, to, amount);return true;
+        return _allowances[owner][spender];
     }
 }
