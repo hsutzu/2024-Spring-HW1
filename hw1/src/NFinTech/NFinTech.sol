@@ -74,8 +74,8 @@ contract NFinTech is IERC721 {
         return owner;
     }
 
-    function setApprovalForAll(address operator, bool approved) external override {
-        require(msg.sender != operator, "NFinTech: approve to caller");
+     function setApprovalForAll(address operator, bool approved) external override {
+        require(msg.sender != operator, "ERC721: approve to caller");
         _operatorApproval[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -86,24 +86,29 @@ contract NFinTech is IERC721 {
 
     function approve(address to, uint256 tokenId) external override {
         address owner = ownerOf(tokenId);
-        require(to != owner, "NFinTech: approval to current owner");
-        require(msg.sender == owner || isApprovedForAll(owner, msg.sender), 
-            "NFinTech: approve caller is not owner nor approved for all");
+        require(to != owner, "ERC721: approval to current owner");
+
+        require(
+            msg.sender == owner || isApprovedForAll(owner, msg.sender),
+            "ERC721: approve caller is not owner nor approved for all"
+        );
 
         _tokenApproval[tokenId] = to;
         emit Approval(owner, to, tokenId);
     }
 
-    function getApproved(uint256 tokenId) public view override returns (address) {
-        require(_owner[tokenId] != address(0), "NFinTech: approved query for nonexistent token");
+    function getApproved(uint256 tokenId) public view override returns (address operator) {
+        require(_owner[tokenId] != address(0), "ERC721: approved query for nonexistent token");
         return _tokenApproval[tokenId];
     }
 
     function transferFrom(address from, address to, uint256 tokenId) public override {
-        require(_owner[tokenId] == from, "NFinTech: transfer from incorrect owner");
-        require(to != address(0), "NFinTech: transfer to the zero address");
-        require(_tokenApproval[tokenId] == msg.sender || isApprovedForAll(from, msg.sender), 
-            "NFinTech: caller is not token owner nor approved");
+        require(_owner[tokenId] == from, "ERC721: transfer from incorrect owner");
+        require(to != address(0), "ERC721: transfer to the zero address");
+
+        _beforeTokenTransfer(from, to, tokenId);
+
+        _approve(address(0), tokenId);
 
         _balances[from] -= 1;
         _balances[to] += 1;
@@ -112,34 +117,23 @@ contract NFinTech is IERC721 {
         emit Transfer(from, to, tokenId);
     }
 
-    function _isApprovedOrOwner(address spender, uint256 tokenId) private view returns (bool) {
-        address owner = ownerOf(tokenId);
-        return (spender == owner || getApproved(tokenId) == spender || isApprovedForAll(owner, spender));
-    }
-
-   function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) public override {
-        require(_isApprovedOrOwner(msg.sender, tokenId), "NFinTech: caller is not owner nor approved");
-        _safeTransfer(from, to, tokenId, data);
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) public override {
+        transferFrom(from, to, tokenId);
+        require(_checkOnERC721Received(from, to, tokenId, data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
     function safeTransferFrom(address from, address to, uint256 tokenId) public override {
-        safeTransferFrom(from, to, tokenId, bytes(""));
+        safeTransferFrom(from, to, tokenId, "");
     }
 
-    function _safeTransfer(address from, address to, uint256 tokenId, bytes memory data) internal {
-        transferFrom(from, to, tokenId);
-        require(_checkOnERC721Received(from, to, tokenId, data), "NFinTech: transfer to non ERC721Receiver implementer");
-    }
-
-    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory data) private returns (bool) {
+    function _checkOnERC721Received(address from, address to, uint256 tokenId, bytes memory _data) private returns (bool) {
         if (isContract(to)) {
-            try IERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, data) returns (bytes4 retval) {
+            try IERC721TokenReceiver(to).onERC721Received(msg.sender, from, tokenId, _data) returns (bytes4 retval) {
                 return retval == IERC721TokenReceiver.onERC721Received.selector;
             } catch (bytes memory reason) {
                 if (reason.length == 0) {
-                    revert("NFinTech: transfer to non ERC721Receiver implementer");
+                    revert("ERC721: transfer to non ERC721Receiver implementer");
                 } else {
-                    // Use assembly to revert with the custom error message
                     assembly {
                         revert(add(32, reason), mload(reason))
                     }
@@ -150,8 +144,18 @@ contract NFinTech is IERC721 {
         }
     }
 
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal virtual {
+        // Hook that is called before any token transfer. This includes minting
+        // and burning.
+    }
+
+    function _approve(address to, uint256 tokenId) internal virtual {
+        _tokenApproval[tokenId] = to;
+        emit Approval(ownerOf(tokenId), to, tokenId);
+    }
+
     function isContract(address account) internal view returns (bool) {
-        // This method relies on extcodesize to determine if an address is a contract
+        // This method returns true if `account` is a contract.
         uint256 size;
         assembly { size := extcodesize(account) }
         return size > 0;
