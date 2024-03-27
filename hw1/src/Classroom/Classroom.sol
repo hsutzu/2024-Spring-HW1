@@ -26,7 +26,7 @@ interface IClassroomV2 {
 contract StudentV2 {
     function register() external view returns (uint256) {
         // TODO: please add your implementaiton here
-        IClassroomV2 ClassroomV2 = IClassroomV2(msg.sender)
+        IClassroomV2 ClassroomV2 = IClassroomV2(msg.sender);
         if(ClassroomV2.isEnrolled()){
             return 123;
         }
