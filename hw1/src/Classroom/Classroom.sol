@@ -8,8 +8,8 @@ contract StudentV1 {
     function register() external returns (uint256) {
         // TODO: please add your implementaiton here
         
-        if(init == 0){
-            init++;
+        if(count == 0){
+            count++;
             return 1000;
             
         }
