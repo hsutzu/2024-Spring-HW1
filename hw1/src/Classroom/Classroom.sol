@@ -40,7 +40,7 @@ contract StudentV2 {
 contract StudentV3 {
     function register() external view returns (uint256) {
         // TODO: please add your implementaiton here
-        if(gas == 10000){
+        if(gasleft() == 10000){
             return 1000;
         }
         else{
