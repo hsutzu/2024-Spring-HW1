@@ -7,6 +7,14 @@ contract StudentV1 {
 
     function register() external returns (uint256) {
         // TODO: please add your implementaiton here
+        bool public init = 0;
+        if(init == 0){
+            return 2000;
+            init++;
+        }
+        else{
+            return 123;
+        }
     }
 }
 
