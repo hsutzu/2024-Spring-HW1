@@ -4,13 +4,14 @@ pragma solidity ^0.8.0;
 /* Problem 1 Interface & Contract */
 contract StudentV1 {
     // Note: You can declare some state variable
-    uint256 private init = 0;
+    uint256 private count = 0;
     function register() external returns (uint256) {
         // TODO: please add your implementaiton here
         
         if(init == 0){
-            return 1000;
             init++;
+            return 1000;
+            
         }
         else{
             return 123;
@@ -40,7 +41,7 @@ contract StudentV2 {
 contract StudentV3 {
     function register() external view returns (uint256) {
         // TODO: please add your implementaiton here
-        if(gasleft() > 8000){
+        if(gasleft() > 6000){
             return 1000;
         }
         else{
