@@ -37,7 +37,8 @@ contract NFinTech is IERC721 {
     mapping(address => mapping(address => bool)) _operatorApproval;
 
     error ZeroAddress();
-
+    error ApprovalToZeroAddress();
+    
     constructor(string memory name_, string memory symbol_) payable {
         _name = name_;
         _symbol = symbol_;
@@ -74,7 +75,8 @@ contract NFinTech is IERC721 {
         return owner;
     }
 
-     function setApprovalForAll(address operator, bool approved) external override {
+    function setApprovalForAll(address operator, bool approved) external override {
+        require(operator != address(0), "ERC721: approve to the zero address");
         require(msg.sender != operator, "ERC721: approve to caller");
         _operatorApproval[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
@@ -86,12 +88,10 @@ contract NFinTech is IERC721 {
 
     function approve(address to, uint256 tokenId) external override {
         address owner = ownerOf(tokenId);
+        require(to != address(0), "ERC721: approve to the zero address");
         require(to != owner, "ERC721: approval to current owner");
-
-        require(
-            msg.sender == owner || isApprovedForAll(owner, msg.sender),
-            "ERC721: approve caller is not owner nor approved for all"
-        );
+        require(msg.sender == owner || isApprovedForAll(owner, msg.sender),
+            "ERC721: approve caller is not owner nor approved for all");
 
         _tokenApproval[tokenId] = to;
         emit Approval(owner, to, tokenId);
