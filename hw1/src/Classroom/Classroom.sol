@@ -20,7 +20,7 @@ contract StudentV1 {
 
 /* Problem 2 Interface & Contract */
 interface IClassroomV2 {
-    function isEnrolled(address) external view returns (bool);
+    function isEnrolled() external view returns (bool);
 }
 
 contract StudentV2 {
@@ -40,7 +40,7 @@ contract StudentV2 {
 contract StudentV3 {
     function register() external view returns (uint256) {
         // TODO: please add your implementaiton here
-        if(gasleft() == 10000){
+        if(gasleft() > 8000){
             return 1000;
         }
         else{
